@@ -45,6 +45,7 @@ fleetctl-switch(){
 }
 destroy_mongo_replica() {
   export FLEETCTL_TUNNEL=$1:22
+  fleetctl destroy mongo-data@{1..3}.service 
   fleetctl destroy mongo@{1..3}.service
   fleetctl destroy mongo@.service
   fleetctl destroy mongo-replica-config.service
@@ -53,28 +54,13 @@ destroy_mongo_replica() {
   etcdctl rm /mongo/replica/siteUserAdmin --recursive
   etcdctl rm /mongo/replica --recursive
   etcdctl set /mongo/replica/name myreplica
-
-  echo 'Listing etcd /mongo dirs...'
-  ssh -A core@$1 'etcdctl ls /mongo --recursive';
-
-  echo Listing $1 /var/mongo
-  ssh -A core@$1 'sudo rm -rf /var/mongo/*'
-  ssh -A core@$1 'ls /var/mongo/'
-
-  echo Listing $2 /var/mongo
-  ssh -A core@$2 'sudo rm -rf /var/mongo/*'
-  ssh -A core@$2 'ls /var/mongo/'
-
-  echo Listing $3 /var/mongo
-  ssh -A core@$3 'sudo rm -rf /var/mongo/*'
-  ssh -A core@$3 'ls /var/mongo/'
 }
 ```
 
 To start,
 ```
 fleetctl-switch xx.xx.xx.xx
-fleetctl start mongo@{1..3}.service mongo-replica-config.service
+fleetctl start mongo-data@{1..3}.service mongo@{1..3}.service mongo-replica-config.service
 ```
 
 To see what's going on in a server,

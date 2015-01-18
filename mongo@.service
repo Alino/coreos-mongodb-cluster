@@ -4,6 +4,8 @@ After=docker.service
 Requires=docker.service
 After=etcd.service
 Requires=etcd.service
+After=mongo-data@%i.service
+Requires=mongo-data@%i.service
 
 [Service]
 KillMode=none
@@ -11,6 +13,7 @@ TimeoutStartSec=0
 TimeoutStopSec=360
 EnvironmentFile=/etc/environment
 Environment=INSTANCE=%i
+ExecStartPre=/bin/bash -c "/usr/bin/docker pull quay.io/jaigouk/mongo-container:latest"
 ExecStartPre=/bin/bash -c "/usr/bin/docker pull mongo:2.6"
 ExecStartPre=-/bin/bash -c "/usr/bin/docker rm -f mongodb"
 ExecStart=/bin/bash -c "\
@@ -37,7 +40,7 @@ ExecStart=/bin/bash -c "\
           docker run \
               --rm \
               --name mongodb \
-              -v /var/mongo:/data/db \
+              --volumes-from mongo-data \
               -p 27017:27017 \
               mongo:2.6 mongod $MONGO_ARGS"
 ExecStartPost=/bin/bash -c "\
@@ -89,5 +92,5 @@ ExecStop=/bin/bash -c -v "\
 Restart=on-failure
 
 [X-Fleet]
-X-Conflicts=%p@*.service
 Conflicts=%p@*.service
+MachineOf=mongo-data@%i.service
