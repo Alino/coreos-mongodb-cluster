@@ -1,3 +1,5 @@
+[![Docker Repository on Quay.io](https://quay.io/repository/jaigouk/mongo-container/status "Docker Repository on Quay.io")](https://quay.io/repository/jaigouk/mongo-container)
+
 Deploy a replicaset to coreos like a boss.
 Auto-discover new members via etcd.
 
