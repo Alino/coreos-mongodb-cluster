@@ -37,7 +37,7 @@ ExecStart=/bin/bash -c "\
           fi; \
           docker run --rm -p 27017:27017 --name mongodb \
               --volumes-from mongo-data%i \
-              19hz/mongo-container:latest $MONGO_ARGS"
+              19hz/mongo-container:latest mongod $MONGO_ARGS"
 
 ExecStartPost=/bin/bash -c "\
           set -e; \
@@ -62,12 +62,19 @@ ExecStartPost=/bin/bash -c "\
                                       $(openssl rand -base64 32)); \
           \
           echo Creating the siteUserAdmin user... ; \
-          /usr/bin/docker run -t --rm --volumes-from mongo-data%i --entrypoint='mongo' \
+          /usr/bin/docker run -t --rm --volumes-from mongo-data%i \
             19hz/mongo-container:latest \
-            $COREOS_PRIVATE_IPV4/admin \
+            mongo $COREOS_PRIVATE_IPV4/admin \
             --eval \"db.createUser({user:'siteUserAdmin', \
                                     pwd:'$SITE_USR_ADMIN_PWD', \
                                     roles: [{role:'userAdminAnyDatabase', db:'admin'}, 'readWrite']});\"; \
+          echo Creating the siteRootAdmin user... ; \
+          /usr/bin/docker run -t --rm --volumes-from mongo-data%i \
+            19hz/mongo-container:latest \
+            mongo $COREOS_PRIVATE_IPV4/admin \
+            --eval \"db.createUser({user:'siteRootAdmin', \
+                                    pwd:'$SITE_ROOT_ADMIN_PWD', \
+                                    roles: [{role:'root', db:'admin'}, 'readWrite']});\"; \
           \
           echo restarting now... ; \
           /usr/bin/sleep 60; \
