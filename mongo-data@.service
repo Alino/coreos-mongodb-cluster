@@ -9,14 +9,14 @@ Requires=etcd.service
 User=core
 TimeoutStartSec=0
 EnvironmentFile=/etc/environment
-ExecStartPre=/usr/bin/docker pull quay.io/jaigouk/data-only-container:latest
-ExecStartPre=-/usr/bin/docker rm mongo-data
-ExecStart=/usr/bin/docker run --rm --name mongo-data%i quay.io/jaigouk/data-only-container
-ExecStop=/usr/bin/docker stop mongo-data
-ExecStopPost=-/usr/bin/docker rm mongo-data
+ExecStartPre=/usr/bin/docker pull jaigouk/data-only-container
+ExecStartPre=-/usr/bin/docker rm mongo-data%i
+ExecStart=/usr/bin/docker run --rm --name mongo-data%i jaigouk/data-only-container
+ExecStop=/usr/bin/docker stop mongo-data%i
+ExecStopPost=-/usr/bin/docker rm mongo-data%i
 
 Restart=always
-RestartSec=5s
+RestartSec=10s
 
 [X-Fleet]
 Conflicts=mongo-data.*.service

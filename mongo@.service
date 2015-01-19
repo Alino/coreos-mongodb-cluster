@@ -13,7 +13,7 @@ TimeoutStartSec=0
 TimeoutStopSec=360
 EnvironmentFile=/etc/environment
 Environment=INSTANCE=%i
-ExecStartPre=/bin/bash -c "/usr/bin/docker pull quay.io/jaigouk/mongo-container:latest"
+ExecStartPre=/bin/bash -c "/usr/bin/docker pull 19hz/mongo-container:latest"
 ExecStartPre=-/bin/bash -c "/usr/bin/docker rm -f mongodb"
 ExecStart=/bin/bash -c "\
           set -e; \
@@ -37,7 +37,7 @@ ExecStart=/bin/bash -c "\
           fi; \
           docker run --rm -p 27017:27017 --name mongodb \
               --volumes-from mongo-data%i \
-              quay.io/jaigouk/mongo-container:latest $MONGO_ARGS"
+              19hz/mongo-container:latest $MONGO_ARGS"
 
 ExecStartPost=/bin/bash -c "\
           set -e; \
@@ -63,13 +63,14 @@ ExecStartPost=/bin/bash -c "\
           \
           echo Creating the siteUserAdmin user... ; \
           /usr/bin/docker run -t --rm --volumes-from mongo-data%i --entrypoint='mongo' \
-            quay.io/jaigouk/mongo-container:latest \
+            19hz/mongo-container:latest \
             $COREOS_PRIVATE_IPV4/admin \
             --eval \"db.createUser({user:'siteUserAdmin', \
                                     pwd:'$SITE_USR_ADMIN_PWD', \
                                     roles: [{role:'userAdminAnyDatabase', db:'admin'}, 'readWrite']});\"; \
           \
           echo restarting now... ; \
+          /usr/bin/sleep 60; \
           exit 1"
 ExecStop=/bin/bash -c -v "\
           /usr/bin/docker stop -t 60 mongodb || true; \
