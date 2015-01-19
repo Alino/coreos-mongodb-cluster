@@ -23,11 +23,10 @@ ENV MONGO_VERSION 2.6.7
 
 RUN curl -SL "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-$MONGO_VERSION.tgz" -o mongo.tgz \
   && curl -SL "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-$MONGO_VERSION.tgz.sig" -o mongo.tgz.sig \
-  && gpg --verify mongo.tgz.sig \
   && tar -xvf mongo.tgz -C /usr/local --strip-components=1 \
   && rm mongo.tgz*
 
-COPY docker-entrypoint.sh /entrypoint.sh
+COPY mongo-entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 # Expose ports.
