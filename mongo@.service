@@ -64,7 +64,7 @@ ExecStartPost=/bin/bash -c "\
                                       $(openssl rand -base64 32)); \
           \
           echo Creating the siteUserAdmin user... ; \
-          /usr/bin/docker run -t --rm --volumes-from mongo-data%i --entrypoint=mongo" \
+          /usr/bin/docker run -t --rm --volumes-from mongo-data%i --entrypoint=\"mongo\" \
             quay.io/jaigouk/mongo-container:latest \
             $COREOS_PRIVATE_IPV4/admin \
             --eval \"db.createUser({user:'siteUserAdmin', \
@@ -72,7 +72,7 @@ ExecStartPost=/bin/bash -c "\
                                     roles: [{role:'userAdminAnyDatabase', db:'admin'}, 'readWrite']});\"; \
           \
           echo Creating the siteRootAdmin user... ; \
-          /usr/bin/docker run -t --rm --volumes-from mongo-data%i --entrypoint=mongo" \
+          /usr/bin/docker run -t --rm --volumes-from mongo-data%i --entrypoint=\"mongo\" \
             quay.io/jaigouk/mongo-container:latest \
             $COREOS_PRIVATE_IPV4/admin \
             --eval \"db.createUser({user:'siteRootAdmin', \
