@@ -11,7 +11,7 @@ TimeoutStartSec=0
 EnvironmentFile=/etc/environment
 ExecStartPre=/usr/bin/docker pull quay.io/jaigouk/data-only-container:latest
 ExecStartPre=-/usr/bin/docker rm mongo-data
-ExecStart=/usr/bin/docker run --rm --name mongo-data quay.io/jaigouk/data-only-container
+ExecStart=/usr/bin/docker run --rm --name mongo-data%i quay.io/jaigouk/data-only-container
 ExecStop=/usr/bin/docker stop mongo-data
 ExecStopPost=-/usr/bin/docker rm mongo-data
 

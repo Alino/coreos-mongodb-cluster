@@ -36,7 +36,7 @@ ExecStart=/bin/bash -c "\
             fi; \
           fi; \
           docker run --rm -p 27017:27017 --name mongodb \
-              --volumes-from mongo-data \
+              --volumes-from mongo-data%i \
               quay.io/jaigouk/mongo-container:latest $MONGO_ARGS"
 
 ExecStartPost=/bin/bash -c "\
