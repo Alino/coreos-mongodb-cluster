@@ -90,9 +90,9 @@ fleetctl-switch xx.xx.xx.xx
 fleetctl start mongo-data@{1..3}.service mongo@{1..3}.service mongo-replica-config.service
 ```
 
-To see what's going on in a server,
+To see what's going on with a service,
 ```
-fleetctl-ssh
+fleetctl journal -f mongo@1.service
 ```
 
 To delete all mongodb files,

@@ -16,5 +16,4 @@ RUN echo "update and install mongo" \
 EXPOSE 27017
 EXPOSE 28017
 
-ENTRYPOINT ["mongod"]
-CMD ["-f", "/data/db/mongodb.conf"]
+ENTRYPOINT ["mongod", "-f", "/data/db/mongodb.conf"]
