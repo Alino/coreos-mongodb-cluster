@@ -22,10 +22,9 @@ ExecStart=/bin/bash -c "\
           MONGO_ARGS='--smallfiles'; \
           if [ -n \"$REPLICA_KEY\" ]; \
           then \
-            MONGO_ARGS=\"--replSet $REPLICA_NAME --keyFile /data/db/replica.key\"; \
-            mkdir -p /var/mongo; \
-            echo $REPLICA_KEY > /var/mongo/replica.key; \
-            chmod 700 /var/mongo/replica.key; \
+            MONGO_ARGS=\"--replSet=$REPLICA_NAME --keyFile=/data/db/replica.key\"; \
+            echo $REPLICA_KEY > /data/db/replica.key; \
+            chmod 600 /data/db/replica.key; \
           else \
             if [ \"$INSTANCE\" -eq \"1\" ]; \
             then \
@@ -36,14 +35,13 @@ ExecStart=/bin/bash -c "\
               exit 1; \
             fi; \
           fi; \
-          docker run \
-              --rm \
-              --name mongodb \
+          docker run --rm -p 27017:27017 --name mongodb \
               --volumes-from mongo-data \
-              -p 27017:27017 \
               quay.io/jaigouk/mongo-container:latest $MONGO_ARGS"
+
 ExecStartPost=/bin/bash -c "\
           set -e; \
+          echo EXEC START POST STEP; \
           /usr/bin/etcdctl set /mongo/replica/nodes/$COREOS_PRIVATE_IPV4/port 27017; \
           /usr/bin/etcdctl set /mongo/replica/nodes/$COREOS_PRIVATE_IPV4/status on; \
           REPLICA_KEY=$(/usr/bin/etcdctl get /mongo/replica/key 2>/dev/null || true); \
@@ -64,30 +62,21 @@ ExecStartPost=/bin/bash -c "\
                                       $(openssl rand -base64 32)); \
           \
           echo Creating the siteUserAdmin user... ; \
-          /usr/bin/docker run -t --rm --volumes-from mongo-data%i --entrypoint=\"mongo\" \
+          /usr/bin/docker run -t --rm --volumes-from mongo-data%i --entrypoint='mongo' \
             quay.io/jaigouk/mongo-container:latest \
             $COREOS_PRIVATE_IPV4/admin \
             --eval \"db.createUser({user:'siteUserAdmin', \
                                     pwd:'$SITE_USR_ADMIN_PWD', \
                                     roles: [{role:'userAdminAnyDatabase', db:'admin'}, 'readWrite']});\"; \
           \
-          echo Creating the siteRootAdmin user... ; \
-          /usr/bin/docker run -t --rm --volumes-from mongo-data%i --entrypoint=\"mongo\" \
-            quay.io/jaigouk/mongo-container:latest \
-            $COREOS_PRIVATE_IPV4/admin \
-            --eval \"db.createUser({user:'siteRootAdmin', \
-                                    pwd:'$SITE_ROOT_PWD', \
-                                    roles: [{role:'root', db:'admin'}, 'readWrite']});\"; \
-          \
-          \
           echo restarting now... ; \
           exit 1"
-
 ExecStop=/bin/bash -c -v "\
           /usr/bin/docker stop -t 60 mongodb || true; \
           /usr/bin/etcdctl set /mongo/replica/nodes/$COREOS_PRIVATE_IPV4/status off"
 Restart=on-failure
 
 [X-Fleet]
+X-Conflicts=%p@*.service
 Conflicts=%p@*.service
 MachineOf=mongo-data@%i.service
