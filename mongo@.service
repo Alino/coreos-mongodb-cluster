@@ -14,7 +14,6 @@ TimeoutStopSec=360
 EnvironmentFile=/etc/environment
 Environment=INSTANCE=%i
 ExecStartPre=/bin/bash -c "/usr/bin/docker pull quay.io/jaigouk/mongo-container:latest"
-ExecStartPre=/bin/bash -c "/usr/bin/docker pull mongo:2.6"
 ExecStartPre=-/bin/bash -c "/usr/bin/docker rm -f mongodb"
 ExecStart=/bin/bash -c "\
           set -e; \
@@ -42,7 +41,7 @@ ExecStart=/bin/bash -c "\
               --name mongodb \
               --volumes-from mongo-data \
               -p 27017:27017 \
-              mongo:2.6 mongod $MONGO_ARGS"
+              quay.io/jaigouk/mongo-container:latest $MONGO_ARGS"
 ExecStartPost=/bin/bash -c "\
           set -e; \
           /usr/bin/etcdctl set /mongo/replica/nodes/$COREOS_PRIVATE_IPV4/port 27017; \
@@ -65,19 +64,17 @@ ExecStartPost=/bin/bash -c "\
                                       $(openssl rand -base64 32)); \
           \
           echo Creating the siteUserAdmin user... ; \
-          /usr/bin/docker run \
-            -t --rm \
-            mongo:2.6 \
-            mongo $COREOS_PRIVATE_IPV4/admin \
+          /usr/bin/docker run -t --rm --volumes-from mongo-data%i --entrypoint=mongo" \
+            quay.io/jaigouk/mongo-container:latest \
+            $COREOS_PRIVATE_IPV4/admin \
             --eval \"db.createUser({user:'siteUserAdmin', \
                                     pwd:'$SITE_USR_ADMIN_PWD', \
                                     roles: [{role:'userAdminAnyDatabase', db:'admin'}, 'readWrite']});\"; \
           \
           echo Creating the siteRootAdmin user... ; \
-          /usr/bin/docker run \
-            -t --rm \
-            mongo:2.6 \
-            mongo $COREOS_PRIVATE_IPV4/admin \
+          /usr/bin/docker run -t --rm --volumes-from mongo-data%i --entrypoint=mongo" \
+            quay.io/jaigouk/mongo-container:latest \
+            $COREOS_PRIVATE_IPV4/admin \
             --eval \"db.createUser({user:'siteRootAdmin', \
                                     pwd:'$SITE_ROOT_PWD', \
                                     roles: [{role:'root', db:'admin'}, 'readWrite']});\"; \

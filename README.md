@@ -5,8 +5,10 @@ Auto-discover new members via etcd.
 
 ## Deploy
 
+If you destroy mongo-data{1..3}.service, your data is going to be lost. Use [docker-volumes](https://github.com/cpuguy83/docker-volumes) to backup your data. If you are already running replica set, destroy them first.
+
 ```
-fleetctl destroy mongo@{1..3}.service  mongo-replica-config.service 
+fleetctl destroy mongo-data@{1..3}.service mongo@{1..3}.service  mongo-replica-config.service 
 
 etcdctl set /mongo/replica/name myreplica
 
@@ -32,6 +34,29 @@ docker run -it --rm mongo:2.6 mongo $COREOS_PRIVATE_IPV4/admin  -u siteRootAdmin
 $ Welcome to the MongoDB shell.
 ```
 
+## Backup
+
+You need to setup your server with docker-tcp.socket as mentioned in [this coreos document](https://coreos.com/docs/launching-containers/building/customizing-docker/) to use [docker-volumes](https://github.com/cpuguy83/docker-volumes). You can use https://coreos.com/validate/ to validate your cloud-init file.
+
+
+```
+$ brew install go; cd ~/
+$ mkdir -p go/{src,bin,pkg}
+```
+
+add following lines to zshrc or bashrc and source it.
+```
+export GOPATH=$HOME/go
+export PATH=$PATH:$GOPATH/bin
+export PATH="$PATH:/usr/local/opt/go/libexec/bin"
+```
+
+```
+git clone git@github.com:cpuguy83/docker-volumes.git ~/go/src/docker-volumes
+cd ~/go/src/docker-volumes
+go get
+go build
+```
 
 ### Trouble shooting
 
