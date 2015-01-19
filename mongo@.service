@@ -35,7 +35,7 @@ ExecStart=/bin/bash -c "\
                     echo \"starting first node to configure\"; \
                 else \
                     echo \"replica is not ready yet\"; \
-                    sleep 60; \
+                    /usr/bin/sleep 60; \
                     exit 1; \
                fi; \
           fi;\
