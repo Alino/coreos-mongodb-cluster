@@ -25,17 +25,15 @@ ExecStart=/bin/bash -c "\
         echo Will configure replica set from now; \
         echo trying to init the replicaset...; \
         \
-        /usr/bin/docker run -t --rm --volumes-from mongo-data1 \
-            19hz/mongo-container:latest \
-            mongo $COREOS_PRIVATE_IPV4/admin \
+        /usr/bin/docker run -d -t -i --volumes-from mongo-data1 \
+            19hz/mongo-container:latest mongo $COREOS_PRIVATE_IPV4/admin \
             -u siteRootAdmin -p $SITE_ROOT_PWD \
             --eval \"rs.status().startupStatus === 3 && rs.initiate();\"; \
         \
         /usr/bin/sleep 60; \
         echo fix address of first node...; \
-        /usr/bin/docker run -t --rm --volumes-from mongo-data1 \
-            19hz/mongo-container:latest \
-            mongo $COREOS_PRIVATE_IPV4/admin \
+        /usr/bin/docker run -d -t -i --volumes-from mongo-data1 \
+            19hz/mongo-container:latest mongo $COREOS_PRIVATE_IPV4/admin \
             -u siteRootAdmin -p $SITE_ROOT_PWD \
             --eval \"var config = rs.config(); \
                 if (config.members.length === 1) { \
@@ -50,9 +48,8 @@ ExecStart=/bin/bash -c "\
                      xargs -I{} basename {} | \
                      xargs -I{} echo \"rs.add('{}:27017');\"); \
         \
-        /usr/bin/docker run -t --rm --volumes-from mongo-data1 \
-            19hz/mongo-container:latest \
-            mongo $COREOS_PRIVATE_IPV4/admin \
+        /usr/bin/docker run -d -t -i --volumes-from mongo-data1 \
+            19hz/mongo-container:latest mongo $COREOS_PRIVATE_IPV4/admin \
             -u siteRootAdmin -p $SITE_ROOT_PWD \
             --eval \"$ADD_CMDS\" ; \
         \
