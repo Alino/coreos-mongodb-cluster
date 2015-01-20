@@ -10,7 +10,8 @@ EnvironmentFile=/etc/environment
 ExecStartPre=/bin/bash -c "docker pull 19hz/mongo-container:latest"
 ExecStartPre=/bin/bash -c "set -e; \
     SITE_ROOT_PWD=$(etcdctl get /mongo/replica/siteRootAdmin/pwd 2>/dev/null || true ); \
-    if (test -z \"$SITE_ROOT_PWD\"); \
+    REPLICA_KEY=$(etcdctl get /mongo/replica/key 2>/dev/null || true); \
+    if (test -z \"$SITE_ROOT_PWD\") && (test -z \"$REPLICA_KEY\"); \
     then \
         echo \"WAITING.... siteRootAdmin is not yet configured...\"; \
         sleep 60; \
