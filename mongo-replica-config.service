@@ -8,45 +8,8 @@ TimeoutStartSec=360
 TimeoutStopSec=360
 EnvironmentFile=/etc/environment
 ExecStartPre=/bin/bash -c "docker pull 19hz/mongo-container:latest"
-ExecStart=/bin/bash -c "\
-    set -e; \
-    REPLICA_NAME=$(etcdctl get /mongo/replica/name 2>/dev/null || true); \
-    OTHER_NODES=$(etcdctl ls /mongo/replica/nodes | \
-                    xargs -I{} basename {} | \
-                    xargs -I{} echo {}:27017 | \
-                    grep -v $COREOS_PRIVATE_IPV4); \
-    SITE_ROOT_PWD=$(etcdctl get /mongo/replica/siteRootAdmin/pwd 2>/dev/null || true ); \
-    REPLICA_KEY=$(etcdctl get /mongo/replica/key 2>/dev/null || true); \
-    REPLICA_CONFIGURED=$(etcdctl get /mongo/replica/configured 2>/dev/null || true); \
-    if [ -z \"$SITE_ROOT_PWD\" ]; \
-    then \
-        echo siteRootAdmin is not yet configured...; \
-        sleep 60; \
-        exit 2; \
-    fi; \
-    if [ -n \"$SITE_ROOT_PWD\" ] && [ -z \"$REPLICA_CONFIGURED\" ]; \
-    then \
-        echo Will configure replica set from now; \
-        echo trying to init the replicaset...; \
-        docker run -t -i -d --volumes-from mongo-data1 \
-            19hz/mongo-container:latest mongo $COREOS_PRIVATE_IPV4/admin -u siteRootAdmin -p $SITE_ROOT_PWD \
-            --eval \"rs.status().startupStatus === 3 && rs.initiate();\"; \
-        echo fix address of first node...; \
-        docker run -t -i -d --volumes-from mongo-data1 \
-            19hz/mongo-container:latest mongo $COREOS_PRIVATE_IPV4/admin -u siteRootAdmin -p $SITE_ROOT_PWD \
-            --eval \"var config = rs.config(); \
-                if (config.members.length === 1) { \
-                    config.members[0].host = '$COREOS_PRIVATE_IPV4'; \
-                    rs.reconfig(config); \
-                }\"; \
-        echo adding nodes...; \
-        ADD_CMDS=$(etcdctl ls /mongo/replica/nodes | grep -v $COREOS_PRIVATE_IPV4 | \
-                    xargs -I{} basename {} | xargs -I{} echo \"rs.add('{}:27017');\"); \
-        docker run -t -i -d --volumes-from mongo-data1 \
-            19hz/mongo-container:latest mongo $COREOS_PRIVATE_IPV4/admin -u siteRootAdmin -p $SITE_ROOT_PWD --eval $ADD_CMDS ; \
-        etcdctl set /mongo/replica/configured done; \
-        exit 0; \
-fi;"
+ExecStart=/bin/bash -c "docker run -t \
+                    --volumes-from mongo-data1 19hz/mongo-container:latest config_replica;"
 Restart=on-failure
 [X-Fleet]
 MachineOf=mongo@1.service
