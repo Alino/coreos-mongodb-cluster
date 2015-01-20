@@ -68,7 +68,7 @@ ExecStartPost=/bin/bash -c "set -e; \
           etcdctl set /mongo/replica/key $(openssl rand -base64 741); \
           \
           echo restarting now... ; \
-          /usr/bin/sleep 600000; \
+          /usr/bin/sleep 60; \
           exit 1;"
 
 ExecStop=/bin/bash -c -v "\

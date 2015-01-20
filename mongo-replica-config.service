@@ -10,7 +10,7 @@ EnvironmentFile=/etc/environment
 ExecStartPre=/bin/bash -c "docker pull 19hz/mongo-container:latest"
 ExecStartPre=/bin/bash -c "set -e; \
     SITE_ROOT_PWD=$(etcdctl get /mongo/replica/siteRootAdmin/pwd 2>/dev/null || true ); \
-    if test -z \"$SITE_ROOT_PWD\"; \
+    if (test -z \"$SITE_ROOT_PWD\"); \
     then \
         echo \"WAITING.... siteRootAdmin is not yet configured...\"; \
         sleep 60; \
@@ -37,7 +37,7 @@ ExecStart=/bin/bash -c "set -e; \
     then \
         docker run -t  --volumes-from mongo-data1 \
         19hz/mongo-container:latest mongo $COREOS_PRIVATE_IPV4/admin -u siteRootAdmin -p $SITE_ROOT_PWD \
-        --eval 'var config = rs.config(); if (config.members.length === 1) { config.members[0].host = '$COREOS_PRIVATE_IPV4'; rs.reconfig(config); }'; \
+        --eval \"var config = rs.config(); if (config.members.length === 1) { config.members[0].host = '$COREOS_PRIVATE_IPV4'; rs.reconfig(config); }\"; \
         etcdctl set /mongo/replica/rs_config_done finished; \
         echo \"RS_CONFIG_DONE....\"; \
     fi; \
@@ -50,7 +50,6 @@ ExecStart=/bin/bash -c "set -e; \
     fi; \
 "
 ExecStartPost=/bin/bash -c "set -e; \
-    echo \"ENDING....\"; \
     RS_INIT_DONE=$(etcdctl get /mongo/replica/rs_init_done 2>/dev/null || true ); \
     RS_CONFIG_DONE=$(etcdctl get /mongo/replica/rs_config_done 2>/dev/null || true ); \
     RS_ADDING_NODES_DONE=$(etcdctl get /mongo/replica/rs_adding_node_done 2>/dev/null || true ); \
