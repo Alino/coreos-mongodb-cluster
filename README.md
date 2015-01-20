@@ -29,7 +29,7 @@ SITE_USR_ADMIN_PWD=$(etcdctl get /mongo/replica/siteUserAdmin/pwd); echo $SITE_U
 
 SITE_ROOT_PWD=$(etcdctl get /mongo/replica/siteRootAdmin/pwd); echo $SITE_ROOT_PWD
 
-docker run -it --rm mongo:2.6 mongo $COREOS_PRIVATE_IPV4/admin  -u siteRootAdmin -p $SITE_ROOT_PWD
+docker run -i -t  --volumes-from mongo-data1 19hz/mongo-container:latest mongo $COREOS_PRIVATE_IPV4/admin -u siteRootAdmin -p $SITE_ROOT_PWD
 
 
 $ Welcome to the MongoDB shell.
@@ -73,6 +73,7 @@ fleetctl-switch(){
 }
 destroy_mongo_replica() {
   export FLEETCTL_TUNNEL=$1:22
+  alias etcdctl="ssh -A core@$1 'etcdctl'"
   fleetctl destroy mongo-data@{1..3}.service 
   fleetctl destroy mongo@{1..3}.service
   fleetctl destroy mongo@.service
