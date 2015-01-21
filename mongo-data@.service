@@ -7,7 +7,13 @@ Requires=etcd.service
 
 [Service]
 User=core
-TimeoutStartSec=0
+TimeoutStartSec=360
+TimeoutStopSec=360
+
+# Change killmode from "control-group" to "none" to let Docker remove
+# work correctly.
+KillMode=none
+
 EnvironmentFile=/etc/environment
 ExecStartPre=/usr/bin/docker pull jaigouk/data-only-container
 ExecStartPre=-/usr/bin/docker rm mongo-data%i
@@ -16,6 +22,7 @@ ExecStop=/usr/bin/docker stop mongo-data%i
 ExecStopPost=-/usr/bin/docker rm mongo-data%i
 
 Restart=always
+RestartSec=5s
 
 [X-Fleet]
 Conflicts=mongo-data.*.service
