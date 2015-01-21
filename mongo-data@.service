@@ -7,9 +7,6 @@ Requires=etcd.service
 
 [Service]
 User=core
-TimeoutStartSec=360
-TimeoutStopSec=360
-
 # Change killmode from "control-group" to "none" to let Docker remove
 # work correctly.
 KillMode=none
@@ -22,7 +19,7 @@ ExecStop=/usr/bin/docker stop mongo-data%i
 ExecStopPost=-/usr/bin/docker rm mongo-data%i
 
 Restart=always
-RestartSec=5s
+RestartSec=10s
 
 [X-Fleet]
 Conflicts=mongo-data.*.service

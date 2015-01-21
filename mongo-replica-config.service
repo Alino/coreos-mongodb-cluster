@@ -57,11 +57,12 @@ ExecStart=/bin/bash -c "set -e; \
         echo \"RS_ADDING_NODES_DONE....\"; \
         MONGO_NODES_WITH_COMMA=$(etcdctl ls /mongo/replica/nodes | xargs -I{} basename {} | xargs -I{} printf "%s," {}:27017); \
         MONGO_URL=${MONGO_NODES_WITH_COMMA::-1}; \
-        etcdctl set /mongo/replica/url \"mongodb://siteRootAdmin:@$MONGO_URL/?replicaSet=$REPLICA_NAME&connectTimeoutMS=300000\"; \
+        etcdctl set /mongo/replica/url \"mongodb://siteRootAdmin:@\"$MONGO_URL\"/?replicaSet=$REPLICA_NAME&connectTimeoutMS=300000\"; \
     else \
         sleep 30; /usr/bin/systemctl restart %n; \
     fi; \
 "
+
 # initiate, reconfig, add nodes
 # once initiated, we wait 60s to let mongodb do it's job.
 # even though, this script exits because of timeout, ExecStartPost will check it
@@ -86,7 +87,6 @@ ExecStartPost=/bin/bash -c "set -e; \
         sleep 30; exit 1; \
     fi; \
 "
-
 
 [X-Fleet]
 MachineOf=mongo@1.service
