@@ -19,17 +19,16 @@ ExecStart=/bin/bash -c "\
           set -e; \
           REPLICA_NAME=$(etcdctl get /mongo/replica/name 2>/dev/null || true); \
           REPLICA_KEY=$(etcdctl get /mongo/replica/key 2>/dev/null || true); \
-          REPLICA_CONFIGURED=$(etcdctl get /mongo/replica/configured 2>/dev/null || true); \
           MONGO_ARGS=\"--smallfiles\"; \
-          if [ -n \"$REPLICA_KEY\" ] && [ -n \"$REPLICA_CONFIGURED\" ]; \
+          if [ -n \"$REPLICA_KEY\" ]; \
           then \
                 echo \"replica is ready to start \"; \
                 MONGO_ARGS=\"--replSet=$REPLICA_NAME --keyFile=/data/db/replica.key\"; \
-                docker run -t --entrypoint /bin/bash --volumes-from mongo-data%i \
-                19hz/mongo-container:latest -c \"echo $REPLICA_KEY > /data/db/replica.key\" ;\
-                \
-                docker run -t --entrypoint /bin/bash --volumes-from mongo-data%i \
-                19hz/mongo-container:latest -c \"chmod 600 /data/db/replica.key\" ;\
+                docker run -t -i --entrypoint /bin/bash --volumes-from mongo-data%i \
+                    19hz/mongo-container:latest -c \"echo $REPLICA_KEY > /data/db/replica.key\"; \
+                docker run -t -i --entrypoint /bin/bash --volumes-from mongo-data%i \
+                    19hz/mongo-container:latest -c \"chmod 600 /data/db/replica.key\"; \
+                etcdctl set /mongo/replica/switched_to_replica_mode true; \
           else \
                 if [ \"$INSTANCE\" -ne \"1\" ]; \
                 then \
@@ -68,7 +67,7 @@ ExecStartPost=/bin/bash -c "set -e; \
           etcdctl set /mongo/replica/key $(openssl rand -base64 741); \
           \
           echo restarting now... ; \
-          /usr/bin/sleep 60; \
+          /usr/bin/sleep 10; \
           exit 1;"
 
 ExecStop=/bin/bash -c -v "\

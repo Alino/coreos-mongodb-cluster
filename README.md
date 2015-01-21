@@ -25,8 +25,6 @@ fleetctl-ssh
 
 COREOS_PRIVATE_IPV4=xx.xx.xx.xxx; echo $COREOS_PRIVATE_IPV4
 
-SITE_USR_ADMIN_PWD=$(etcdctl get /mongo/replica/siteUserAdmin/pwd); echo $SITE_USR_ADMIN_PWD
-
 SITE_ROOT_PWD=$(etcdctl get /mongo/replica/siteRootAdmin/pwd); echo $SITE_ROOT_PWD
 
 docker run -i -t  --volumes-from mongo-data1 19hz/mongo-container:latest mongo $COREOS_PRIVATE_IPV4/admin -u siteRootAdmin -p $SITE_ROOT_PWD
