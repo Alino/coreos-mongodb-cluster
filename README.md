@@ -6,7 +6,6 @@ Auto-discover new members via etcd.
 ## Deploy
 `docker login`
 `docker login quay.io`
-
 If you destroy mongo-data{1..3}.service, your data is going to be lost. Use [docker-volumes](https://github.com/cpuguy83/docker-volumes) to backup your data. If you are already running replica set, destroy them first.
 
 ```
