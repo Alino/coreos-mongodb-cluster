@@ -48,8 +48,9 @@ ExecStartPost=/bin/bash -c 'set -e; \
     RS_INIT_DONE=$(etcdctl get /mongo/replica/rs_init_done 2>/dev/null || true ); \
     RS_CONFIG_DONE=$(etcdctl get /mongo/replica/rs_config_done 2>/dev/null || true ); \
     RS_ADDING_NODES_DONE=$(etcdctl get /mongo/replica/rs_adding_node_done 2>/dev/null || true ); \
+    MONGO_URL=$(etcdctl get /mongo/replica/url 2>/dev/null || true ); \
     \
-    if test -n "$RS_ADDING_NODES_DONE"; \
+    if (test -n "$RS_ADDING_NODES_DONE") && (test -z "$MONGO_URL"); \
     then \
         SITE_USR_ADMIN_PWD=$(/usr/bin/etcdctl get /mongo/replica/siteUserAdmin/pwd 2>/dev/null); \
         REPLICA_NAME=$(/usr/bin/etcdctl get /mongo/replica/name 2>/dev/null ); \
@@ -61,17 +62,17 @@ ExecStartPost=/bin/bash -c 'set -e; \
         MONGO_NODES=$(echo $TEMP_STR | sed \'$s/.$//\'); \
         MONGODB="mongodb://siteUserAdmin:$SITE_USR_ADMIN_PWD@$MONGO_NODES/?replicaSet=$REPLICA_NAME&connectTimeoutMS=300000"; \
         SAVE_MONGO_URL=$(/usr/bin/etcdctl get /mongo/replica/url 2>/dev/null || /usr/bin/etcdctl set /mongo/replica/url $MONGODB); \
-        echo "YOUR MONGO REPLICA SET IS CONFIGURED. CHECK /mongo/replica/url "; \
+        echo "SAVED MONGO URL"; \
         sleep 60; /usr/bin/systemctl restart %n; \
     fi; \
     \
-    if (test -n "$RS_INIT_DONE") && (test -n "$RS_CONFIG_DONE") && (test -n "$RS_ADDING_NODES_DONE"); \
+    if (test -n "$RS_INIT_DONE") && (test -n "$RS_CONFIG_DONE") && (test -n "$RS_ADDING_NODES_DONE") && (test -n "$MONGO_URL"); \
     then \
-        echo "EXIT 0...."; \
+        echo "YOUR MONGO REPLICA SET IS CONFIGURED."; \
         sleep 10; \
         etcdctl set /mongo/replica/configured finished; exit 1; \
     else \
-        echo "PLEASE WAIT. WE NEED TO INITIATE REPLICA SET."; \
+        echo "PLEASE WAIT. WE NEED TO SETUP REPLICA SET."; \
         sleep 10; /usr/bin/systemctl restart %n; \
     fi;'
 
