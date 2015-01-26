@@ -22,4 +22,6 @@ Restart=always
 RestartSec=10s
 
 [X-Fleet]
+X-Conflicts=%p@*.service
+Conflicts=%p@*.service
 Conflicts=mongo-data.*.service

@@ -16,7 +16,7 @@ ExecStart=/bin/bash -c 'set -e; \
     REPLICA_MODE=$(etcdctl get /mongo/replica/switched_to_replica_mode 2>/dev/null); \
     if (test -z "$SITE_ROOT_PWD") && (test -z "$REPLICA_KEY") && (test -n "$REPLICA_MODE"); \
     then \
-        echo "WAITING..."; sleep 30; /usr/bin/systemctl restart %n; \
+        echo "WAITING..."; sleep 30; exit 1; \
     fi; \
     echo "STARTING...."; \
     CHECK_MONGO=$(/usr/bin/docker ps | grep mongodb); \
@@ -41,7 +41,7 @@ ExecStart=/bin/bash -c 'set -e; \
         etcdctl set /mongo/replica/rs_adding_node_done finished; \
         echo "RS_ADDING_NODES_DONE...."; \
     else \
-        sleep 30; /usr/bin/systemctl restart %n; \
+        sleep 30; exit 1; \
     fi;'
 
 ExecStartPost=/bin/bash -c 'set -e; \
@@ -63,20 +63,22 @@ ExecStartPost=/bin/bash -c 'set -e; \
         MONGODB="mongodb://siteUserAdmin:$SITE_USR_ADMIN_PWD@$MONGO_NODES/?replicaSet=$REPLICA_NAME&connectTimeoutMS=300000"; \
         SAVE_MONGO_URL=$(/usr/bin/etcdctl get /mongo/replica/url 2>/dev/null || /usr/bin/etcdctl set /mongo/replica/url $MONGODB); \
         echo "SAVED MONGO URL"; \
-        sleep 60; /usr/bin/systemctl restart %n; \
+        sleep 10; exit 0; \
     fi; \
     \
     if (test -n "$RS_INIT_DONE") && (test -n "$RS_CONFIG_DONE") && (test -n "$RS_ADDING_NODES_DONE") && (test -n "$MONGO_URL"); \
     then \
         echo "YOUR MONGO REPLICA SET IS CONFIGURED."; \
         sleep 10; \
-        etcdctl set /mongo/replica/configured finished; exit 1; \
+        etcdctl set /mongo/replica/configured finished; exit 0; \
     else \
         echo "PLEASE WAIT. WE NEED TO SETUP REPLICA SET."; \
-        sleep 10; /usr/bin/systemctl restart %n; \
+        sleep 10; exit 1; \
     fi;'
 
 Restart=on-failure
 
 [X-Fleet]
+X-Conflicts=%p@*.service
+Conflicts=%p@*.service
 MachineOf=mongo@1.service
