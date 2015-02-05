@@ -1,7 +1,10 @@
 [![Docker Repository on Quay.io](https://quay.io/repository/jaigouk/mongo-container/status "Docker Repository on Quay.io")](https://quay.io/repository/jaigouk/mongo-container)
 
-Deploy a replicaset to coreos like a boss.
-Auto-discover new members via etcd. this repo is little bit different from auth0/coreos-mongodb repo. I use data volume container. simple steps to setup replica and nginx loadbalancer altogether, please visit [zero-to-dockerized-meteor-cluster](https://github.com/jaigouk/zero-to-dockerized-meteor-cluster/)
+Deploy a replicaset to coreos like a boss.<br/>
+<br/>
+Auto-discover new members via etcd. this repo is little bit different from auth0/coreos-mongodb repo. I use data volume container. <br/>
+<br/>
+simple steps to setup replica and nginx loadbalancer altogether, please visit [zero-to-dockerized-meteor-cluster](https://github.com/jaigouk/zero-to-dockerized-meteor-cluster/)
 
 ## Setup
 
