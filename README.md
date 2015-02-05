@@ -1,19 +1,78 @@
 [![Docker Repository on Quay.io](https://quay.io/repository/jaigouk/mongo-container/status "Docker Repository on Quay.io")](https://quay.io/repository/jaigouk/mongo-container)
 
 Deploy a replicaset to coreos like a boss.
-Auto-discover new members via etcd.
+Auto-discover new members via etcd. this repo is little bit different from auth0/coreos-mongodb repo. I use data volume container. simple steps to setup replica and nginx loadbalancer altogether, please visit [zero-to-dockerized-meteor-cluster](https://github.com/jaigouk/zero-to-dockerized-meteor-cluster/)
 
-## Deploy
-`docker login`
-`docker login quay.io`
-If you destroy mongo-data{1..3}.service, your data is going to be lost. Use [docker-volumes](https://github.com/cpuguy83/docker-volumes) to backup your data. If you are already running replica set, destroy them first.
+## Setup
+
+### STEP1) Add these to your shell rc file (~/.zsh_aliases)
 
 ```
-fleetctl destroy mongo-data@{1..3}.service mongo@{1..3}.service  mongo-replica-config.service 
+fleetctl-switch(){
+  ssh-add ~/.docker/certs/key.pem
+  DOCKER_HOST=tcp://$1:2376
+  export FLEETCTL_TUNNEL=$1:22
+  #alias etcdctl="ssh -A core@$1 'etcdctl'"
+  alias fleetctl-ssh="fleetctl ssh $(fleetctl list-machines | cut -c1-8 | sed -n 2p)"
+  RPROMPT="%{$fg[magenta]%}[fleetctl:$1]%{$reset_color%}"
+}
 
-etcdctl set /mongo/replica/name myreplica
+setup_fleet_ui(){
+  do_droplets=($1 $2 $3)
 
-fleetctl start mongo-data@{1..3}.service mongo@{1..3}.service mongo-replica-config.service
+  for droplet in ${do_droplets[@]}
+  do
+    ssh -A core@$droplet 'rm -rf ~/.ssh/id_rsa'
+    scp /Users/jaigouk/.docker/certs/key.pem core@$droplet:.ssh/id_rsa
+    ssh -A core@$droplet 'chown -R core:core /home/core/.ssh; chmod 700 /home/core/.ssh; chmod 600 /home/core/.ssh/authorized_keys'
+  done
+  FLEETCTL_TUNNEL=$droplet:22 fleetctl destroy fleet-ui@{1..3}.service
+  FLEETCTL_TUNNEL=$droplet:22 fleetctl destroy fleet-ui@.service
+  FLEETCTL_TUNNEL=$droplet:22 fleetctl submit  /Users/user_name/path_to_templates/fleet-ui@.service
+  FLEETCTL_TUNNEL=$droplet:22 fleetctl start /Users/user_name/path_to_templates/fleet-ui@{1..3}.service
+}
+
+
+start_mongo_replica(){
+  CONTROL_IP=$1
+  export FLEETCTL_TUNNEL=$CONTROL_IP:22
+  ssh -A core@$CONTROL_IP 'etcdctl set /mongo/replica/name myreplica'
+  FLEETCTL_TUNNEL=$1:22 fleetctl submit mongo-data@.service  mongo@.service mongo-replica-config.service
+  FLEETCTL_TUNNEL=$1:22 fleetctl start mongo-data@{1..3}.service
+  FLEETCTL_TUNNEL=$1:22 fleetctl start mongo@{1..3}.service
+  FLEETCTL_TUNNEL=$1:22 fleetctl start mongo-replica-config.service
+}
+destroy_mongo_replica() {
+  CONTROL_IP=$1
+  export FLEETCTL_TUNNEL=$CONTROL_IP:22
+  alias etcdctl="ssh -A core@$CONTROL_IP 'etcdctl'"
+  FLEETCTL_TUNNEL=$1:22 fleetctl destroy mongo-data@{1..3}.service
+  FLEETCTL_TUNNEL=$1:22 fleetctl destroy mongo@{1..3}.service
+  FLEETCTL_TUNNEL=$1:22 fleetctl destroy mongo-data@.service
+  FLEETCTL_TUNNEL=$1:22 fleetctl destroy mongo@.service
+  FLEETCTL_TUNNEL=$1:22 fleetctl destroy mongo-replica-config.service
+  ssh -A core@$CONTROL_IP 'etcdctl rm /mongo/replica/url'
+  ssh -A core@$CONTROL_IP 'etcdctl rm /mongo/replica/siteRootAdmin --recursive'
+  ssh -A core@$CONTROL_IP 'etcdctl rm /mongo/replica/siteUserAdmin --recursive'
+  ssh -A core@$CONTROL_IP 'etcdctl rm /mongo/replica --recursive'
+  ssh -A core@$CONTROL_IP 'etcdctl set /mongo/replica/name myreplica'
+}
+
+```
+
+Since we need dockercfg file to pull private / public repos from hub.docker.com, 
+`docker login`
+
+### STEP2) 
+
+I use fleet-ui to see which services are running on the cluster. And then setup mongo repilca set.
+
+```
+source ~/.zsh_aliases
+fleetctl-switch <do-ip-1>
+setup_fleet_ui <do-ip-1> <do-ip-2> <do-ip-3>
+cd ./fleet/coreos-mongodb-cluster
+start_mongo_replica <do-ip-1>
 ```
 
 ## Connect
@@ -33,7 +92,9 @@ docker run -i -t  --volumes-from mongo-data1 19hz/mongo-container:latest mongo $
 $ Welcome to the MongoDB shell.
 ```
 
-## Backup
+## Backup : docker-volumes
+
+If you destroy mongo-data{1..3}.service, your data is going to be lost. Use [docker-volumes tool](https://github.com/cpuguy83/docker-volumes) to backup your data. 
 
 You need to setup your server with docker-tcp.socket as mentioned in [this coreos document](https://coreos.com/docs/launching-containers/building/customizing-docker/) to use [docker-volumes](https://github.com/cpuguy83/docker-volumes). You can use https://coreos.com/validate/ to validate your cloud-init file.
 
@@ -58,37 +119,6 @@ go build
 ```
 
 ### Trouble shooting
-
-In my shell rc file (~/.zsh_aliases)
-```
-fleetctl-switch(){
-  ssh-add ~/.docker/certs/key.pem
-  DOCKER_HOST=tcp://$1:2376
-  export FLEETCTL_TUNNEL=$1:22
-  alias etcdctl="ssh -A core@$1 'etcdctl'"
-  alias fleetctl-ssh="fleetctl ssh $(fleetctl list-machines | cut -c1-8 | sed -n 2p)"
-  RPROMPT="%{$fg[magenta]%}[fleetctl:$1]%{$reset_color%}"
-}
-destroy_mongo_replica() {
-  export FLEETCTL_TUNNEL=$1:22
-  alias etcdctl="ssh -A core@$1 'etcdctl'"
-  fleetctl destroy mongo-data@{1..3}.service 
-  fleetctl destroy mongo@{1..3}.service
-  fleetctl destroy mongo@.service
-  fleetctl destroy mongo-replica-config.service
-  fleetctl destroy mongo-data@{1..3}.service
-  etcdctl rm /mongo/replica/siteRootAdmin --recursive
-  etcdctl rm /mongo/replica/siteUserAdmin --recursive
-  etcdctl rm /mongo/replica --recursive
-  etcdctl set /mongo/replica/name myreplica
-}
-```
-
-To start,
-```
-fleetctl-switch xx.xx.xx.xx
-fleetctl start mongo-data@{1..3}.service mongo@{1..3}.service mongo-replica-config.service
-```
 
 To see what's going on with a service,
 ```
