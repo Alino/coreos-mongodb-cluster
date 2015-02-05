@@ -1,6 +1,5 @@
 [Unit]
 Description=ReplicaSet Configurator
-BindsTo=mongo@1.service
 
 [Service]
 KillMode=none
@@ -77,8 +76,3 @@ ExecStartPost=/bin/bash -c 'set -e; \
     fi;'
 
 Restart=on-failure
-
-[X-Fleet]
-X-Conflicts=%p@*.service
-Conflicts=%p@*.service
-MachineOf=mongo@1.service
