@@ -63,9 +63,9 @@ destroy_mongo_replica() {
 Since we need dockercfg file to pull private / public repos from hub.docker.com, 
 `docker login`
 
-### STEP2) 
+### STEP2) Setup data volume container and mongodb replica set
 
-I use fleet-ui to see which services are running on the cluster. And then setup mongo repilca set.
+I use fleet-ui to see which services are running on the cluster. And then setup mongo repilca set. Once you launched fleet-ui, you might notice that it takes some time to configure replica set. Please be patient.
 
 ```
 source ~/.zsh_aliases
