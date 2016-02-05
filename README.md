@@ -1,9 +1,11 @@
 [![Docker Repository on Quay.io](https://quay.io/repository/jaigouk/mongo-container/status "Docker Repository on Quay.io")](https://quay.io/repository/jaigouk/mongo-container)
 
-Deploy a replicaset to coreos like a boss.<br/>
-<br/>
-Auto-discover new members via etcd. this repo is little bit different from auth0/coreos-mongodb repo. I use data volume container. <br/>
-<br/>
+Deploy a replicaset to coreos like a boss.
+
+
+Auto-discover new members via etcd. this repo is little bit different from auth0/coreos-mongodb repo. I use data volume container.
+
+
 simple steps to setup replica and nginx loadbalancer altogether, please visit [zero-to-dockerized-meteor-cluster](https://github.com/jaigouk/zero-to-dockerized-meteor-cluster/)
 
 ## Setup
@@ -12,6 +14,7 @@ simple steps to setup replica and nginx loadbalancer altogether, please visit [z
 
 ```
 fleetctl-switch(){
+  mkdir -p ~/.docker/certs && touch ~/.docker/certs/key.pem && chmod 600 ~/.docker/certs/key.pem
   ssh-add ~/.docker/certs/key.pem
   DOCKER_HOST=tcp://$1:2376
   export FLEETCTL_TUNNEL=$1:22
@@ -83,9 +86,9 @@ start_mongo_replica <do-ip-1>
 You can test connecting to your replica from one of your nodes as follows:
 
 ```
-fleetctl-ssh
+fleetctl ssh mongo@1
 
-COREOS_PRIVATE_IPV4=xx.xx.xx.xxx; echo $COREOS_PRIVATE_IPV4
+export $(cat /etc/environment | grep COREOS_PRIVATE_IPV4); echo $COREOS_PRIVATE_IPV4
 
 SITE_ROOT_PWD=$(etcdctl get /mongo/replica/siteRootAdmin/pwd); echo $SITE_ROOT_PWD
 
