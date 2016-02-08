@@ -20,8 +20,8 @@ RUN gpg --keyserver pool.sks-keyservers.net --recv-keys $MONGO_RELEASE_FINGERPRI
 
 ENV MONGO_VERSION 3.0
 
-RUN curl -SL "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-$MONGO_VERSION.tgz" -o mongo.tgz \
-  && curl -SL "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-$MONGO_VERSION.tgz.sig" -o mongo.tgz.sig \
+RUN curl -SL "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon-3.0.0.tgz" -o mongo.tgz \
+  && curl -SL "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon-3.0.0.tgz.sig" -o mongo.tgz.sig \
   && tar -xvf mongo.tgz -C /usr/local --strip-components=1 \
   && rm mongo.tgz*
 
