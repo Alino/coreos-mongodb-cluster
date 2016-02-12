@@ -3,17 +3,14 @@ FROM debian:jessie
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mongodb && useradd -r -g mongodb mongodb
 
-
-
 RUN apt-get update \
-  && apt-get install -y curl numactl \
-  && rm -rf /var/lib/apt/lists/* \
-  && apt-get install -y libssl1.0.0 libssl-dev
+  && apt-get install -y curl numactl libssl1.0.0 libssl-dev \
+  && rm -rf /var/lib/apt/lists/*
 RUN cd /lib/x86_64-linux-gnu \
-    && ln -s libssl.so.1.0.0 libssl.so.10 \
-    && ln -s libcrypto.so.1.0.0 libcrypto.so.10 \
-    && ln -s /lib/x86_64-linux-gnu/libssl.so.1.0.0 /usr/lib/libssl.so.10 \
-    && ln -s /lib/x86_64-linux-gnu/libcrypto.so.1.0.0 /usr/lib/libcrypto.so.10
+  && ln -s libssl.so.1.0.0 libssl.so.10 \
+  && ln -s libcrypto.so.1.0.0 libcrypto.so.10 \
+  && ln -s /lib/x86_64-linux-gnu/libssl.so.1.0.0 /usr/lib/libssl.so.10 \
+  && ln -s /lib/x86_64-linux-gnu/libcrypto.so.1.0.0 /usr/lib/libcrypto.so.10
 
 # grab gosu for easy step-down from root
 RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4
