@@ -4,13 +4,8 @@ FROM debian:jessie
 RUN groupadd -r mongodb && useradd -r -g mongodb mongodb
 
 RUN apt-get update \
-  && apt-get install -y curl numactl libssl1.0.0 libssl-dev \
+  && apt-get install -y curl numactl \
   && rm -rf /var/lib/apt/lists/*
-RUN cd /lib/x86_64-linux-gnu \
-  && ln -s libssl.so.1.0.0 libssl.so.10 \
-  && ln -s libcrypto.so.1.0.0 libcrypto.so.10 \
-  && ln -s /lib/x86_64-linux-gnu/libssl.so.1.0.0 /usr/lib/libssl.so.10 \
-  && ln -s /lib/x86_64-linux-gnu/libcrypto.so.1.0.0 /usr/lib/libcrypto.so.10
 
 # grab gosu for easy step-down from root
 RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4
@@ -20,15 +15,21 @@ RUN curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/dow
   && rm /usr/local/bin/gosu.asc \
   && chmod +x /usr/local/bin/gosu
 
-ENV MONGO_RELEASE_FINGERPRINT 7F0CEB10
-RUN gpg --keyserver pool.sks-keyservers.net --recv-keys $MONGO_RELEASE_FINGERPRINT
 
+# install MongoDB following this documentation:
+# https://docs.mongodb.org/v3.0/tutorial/install-mongodb-on-debian/
 ENV MONGO_VERSION 3.0
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
+RUN echo "deb http://repo.mongodb.org/apt/debian wheezy/mongodb-org/3.0 main" \
+| tee /etc/apt/sources.list.d/mongodb-org-3.0.list
+RUN apt-get update
+RUN apt-get install -y mongodb-org=3.0.0 mongodb-org-server=3.0.0 mongodb-org-shell=3.0.0 mongodb-org-mongos=3.0.0 mongodb-org-tools=3.0.0
+RUN echo "mongodb-org hold" | dpkg --set-selections \
+  && echo "mongodb-org-server hold" | dpkg --set-selections \
+  && echo "mongodb-org-shell hold" | dpkg --set-selections \
+  && echo "mongodb-org-mongos hold" | dpkg --set-selections \
+  && echo "mongodb-org-tools hold" | dpkg --set-selections
 
-RUN curl -SL "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon-3.0.0.tgz" -o mongo.tgz \
-  && curl -SL "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon-3.0.0.tgz.sig" -o mongo.tgz.sig \
-  && tar -xvf mongo.tgz -C /usr/local --strip-components=1 \
-  && rm mongo.tgz*
 
 COPY mongo-entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
