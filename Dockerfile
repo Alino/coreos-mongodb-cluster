@@ -8,7 +8,7 @@ RUN groupadd -r mongodb && useradd -r -g mongodb mongodb
 RUN apt-get update \
   && apt-get install -y curl numactl \
   && rm -rf /var/lib/apt/lists/* \
-  && apt-get install -y libssl1.0.0 libssl-dev  # mongo and mongod needs libssl.so.10
+  && apt-get install -y libssl1.0.0 libssl-dev
 RUN cd /lib/x86_64-linux-gnu \
     && ln -s libssl.so.1.0.0 libssl.so.10 \
     && ln -s libcrypto.so.1.0.0 libcrypto.so.10 \
