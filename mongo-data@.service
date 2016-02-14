@@ -2,8 +2,8 @@
 Description=Mongo Data Volume Service
 After=docker.service
 Requires=docker.service
-After=etcd.service
-Requires=etcd.service
+After=etcd2.service
+Requires=etcd2.service
 
 [Service]
 User=core
@@ -12,9 +12,9 @@ User=core
 KillMode=none
 
 EnvironmentFile=/etc/environment
-ExecStartPre=/usr/bin/docker pull jaigouk/data-only-container
+ExecStartPre=/usr/bin/docker pull alino/data-only-container
 ExecStartPre=-/usr/bin/docker rm mongo-data%i
-ExecStart=/usr/bin/docker run --rm --name mongo-data%i jaigouk/data-only-container
+ExecStart=/usr/bin/docker run --rm --name mongo-data%i alino/data-only-container
 ExecStop=/usr/bin/docker stop mongo-data%i
 ExecStopPost=-/usr/bin/docker rm mongo-data%i
 
