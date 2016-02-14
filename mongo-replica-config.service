@@ -7,7 +7,15 @@ KillMode=none
 TimeoutStartSec=0
 TimeoutStopSec=360
 EnvironmentFile=/etc/environment
-ExecStartPre=/bin/bash -c "docker pull 19hz/mongo-container:latest"
+ExecStartPre=/bin/bash -c "docker pull alino/coreos-mongodb-cluster:latest"
+ExecStartPre=/bin/bash -c 'REPLICA_STATUS=$(etcdctl get /mongo/replica/rs_init_done); \
+if [[ $REPLICA_STATUS == "finished" ]]; \
+then \
+  echo "REPLICA_STATUS is \"finished\" exiting..."; \
+  exit 0; \
+else \
+  echo "REPLICA_STATUS IS NOT finished, trying to set up replica set..." ; \
+fi;'
 
 ExecStart=/bin/bash -c 'set -e; \
     SITE_ROOT_PWD=$(etcdctl get /mongo/replica/siteRootAdmin/pwd 2>/dev/null || true ); \
@@ -24,19 +32,19 @@ ExecStart=/bin/bash -c 'set -e; \
     \
     if (test -z "$RS_INIT_DONE") && (test -n "$CHECK_MONGO" ); \
     then \
-        docker run -t --volumes-from mongo-data1 19hz/mongo-container:latest \
+        docker run -t --volumes-from mongo-data1 alino/coreos-mongodb-cluster:latest \
             mongo $COREOS_PRIVATE_IPV4/admin -u siteRootAdmin -p $SITE_ROOT_PWD \
             --eval "rs.status().startupStatus === 3 && rs.initiate();"; \
         etcdctl set /mongo/replica/rs_init_done finished; \
         echo "RS_INIT_DONE...."; \
         /usr/bin/sleep 60; \
         docker run -t  --volumes-from mongo-data1 \
-            19hz/mongo-container:latest mongo $COREOS_PRIVATE_IPV4/admin -u siteRootAdmin -p $SITE_ROOT_PWD \
+            alino/coreos-mongodb-cluster:latest mongo $COREOS_PRIVATE_IPV4/admin -u siteRootAdmin -p $SITE_ROOT_PWD \
             --eval "var config = rs.config(); if (config.members.length === 1) { config.members[0].host = \'$COREOS_PRIVATE_IPV4\'; rs.reconfig(config); }"; \
         etcdctl set /mongo/replica/rs_config_done finished; \
         echo "RS_CONFIG_DONE...."; \
         docker run -t --volumes-from mongo-data1 \
-        19hz/mongo-container:latest mongo $COREOS_PRIVATE_IPV4/admin -u siteRootAdmin -p $SITE_ROOT_PWD --eval "$ADD_CMDS"; \
+        alino/coreos-mongodb-cluster:latest mongo $COREOS_PRIVATE_IPV4/admin -u siteRootAdmin -p $SITE_ROOT_PWD --eval "$ADD_CMDS"; \
         etcdctl set /mongo/replica/rs_adding_node_done finished; \
         echo "RS_ADDING_NODES_DONE...."; \
     else \
@@ -72,6 +80,10 @@ ExecStartPost=/bin/bash -c 'set -e; \
         etcdctl set /mongo/replica/configured finished; exit 0; \
     else \
         echo "PLEASE WAIT. WE NEED TO SETUP REPLICA SET."; \
+        echo "$RS_INIT_DONE"; \
+        echo "$RS_CONFIG_DONE"; \
+        echo "$RS_ADDING_NODES_DONE"; \
+        echo "$MONGO_URL"; \
         sleep 10; exit 1; \
     fi;'
 
