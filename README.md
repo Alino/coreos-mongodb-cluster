@@ -86,7 +86,7 @@ export $(cat /etc/environment | grep COREOS_PRIVATE_IPV4); echo $COREOS_PRIVATE_
 
 SITE_ROOT_PWD=$(etcdctl get /mongo/replica/siteRootAdmin/pwd); echo $SITE_ROOT_PWD
 
-docker run -i -t  --volumes-from mongo-data1 19hz/mongo-container:latest mongo $COREOS_PRIVATE_IPV4/admin -u siteRootAdmin -p $SITE_ROOT_PWD
+docker run -i -t  --volumes-from mongo-data1 alino/coreos-mongodb-cluster:latest mongo $COREOS_PRIVATE_IPV4/admin -u siteRootAdmin -p $SITE_ROOT_PWD
 
 
 $ Welcome to the MongoDB shell.
