@@ -1,7 +1,4 @@
-[![Docker Repository on Quay.io](https://quay.io/repository/jaigouk/mongo-container/status "Docker Repository on Quay.io")](https://quay.io/repository/jaigouk/mongo-container)
-
 Deploy a replicaset to coreos like a boss.
-
 
 Auto-discover new members via etcd. this repo is little bit different from auth0/coreos-mongodb repo. I use data volume container.
 
@@ -71,12 +68,9 @@ Since we need dockercfg file to pull private / public repos from hub.docker.com,
 
 ### STEP2) Setup data volume container and mongodb replica set
 
-I use fleet-ui to see which services are running on the cluster. And then setup mongo repilca set. Once you launched fleet-ui, you might notice that it takes some time to configure replica set. Please be patient.
-
 ```
 source ~/.zsh_aliases
 fleetctl-switch <do-ip-1>
-setup_fleet_ui <do-ip-1> <do-ip-2> <do-ip-3>
 cd ./fleet/coreos-mongodb-cluster
 start_mongo_replica <do-ip-1>
 ```
