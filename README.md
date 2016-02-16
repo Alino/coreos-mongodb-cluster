@@ -1,3 +1,5 @@
+## this fork works with MongoDB 3.0.9
+
 Deploy a replicaset to coreos like a boss.
 
 Auto-discover new members via etcd. this repo is little bit different from auth0/coreos-mongodb repo. I use data volume container.
